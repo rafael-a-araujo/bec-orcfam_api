@@ -1,10 +1,9 @@
-import datetime
-import decimal
+from rest_framework import viewsets
+from orcamento_familiar.models import Transacao
+from orcamento_familiar.serializers import ReceitaSerializer
 
-from django.http import JsonResponse
 
+class ReceitasViewSet(viewsets.ModelViewSet):
+    queryset = Transacao.objects.filter(tipo='R')
+    serializer_class = ReceitaSerializer
 
-def transacoes(request):
-    if request.method == 'GET':
-        transacao = {'id':1, 'descricao':'salario'}
-        return JsonResponse(transacao)

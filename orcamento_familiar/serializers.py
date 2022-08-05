@@ -1,11 +1,13 @@
 from rest_framework import serializers
 from orcamento_familiar.models import Transacao
 
+
 class ReceitaSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Transacao
         fields = ['id', 'descricao', 'valor', 'data']
+        verbose_name_plural = "Transações"
 
     def validate(self, data):
         """

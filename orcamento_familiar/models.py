@@ -2,6 +2,10 @@ from django.db import models
 
 
 class Transacao(models.Model):
+    class Meta:
+        verbose_name_plural = 'Transações'
+        verbose_name ='Transação'
+
     TIPO = (
         ('D', 'Despesa'),
         ('R', 'Receita')
