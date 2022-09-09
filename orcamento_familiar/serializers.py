@@ -1,19 +1,21 @@
 from rest_framework import serializers
-from orcamento_familiar.models import Transacao
+
+from orcamento_familiar.enums import Categorias
+from orcamento_familiar.models import Receita, Despesa
 
 
 class ReceitaSerializer(serializers.ModelSerializer):
 
     class Meta:
-        model = Transacao
+        model = Receita
         fields = ['descricao', 'valor', 'data']
-        verbose_name_plural = "Transações"
+        verbose_name_plural = "Receitas"
 
     def validate(self, data):
         """
         Verifica se existe receita com a mesma descrição para este mês.
         """
-        receitas_ja_cadastradas = Transacao.objects.filter(descricao=data['descricao'], data__month=data['data'].month, data__year=data['data'].year, tipo='R')
+        receitas_ja_cadastradas = Receita.objects.filter(descricao=data['descricao'], data__month=data['data'].month, data__year=data['data'].year)
         if receitas_ja_cadastradas:
             if self.is_create_receita():
                 raise serializers.ValidationError("Cadastro de receita duplicada - esta receita já existe neste mês.")
@@ -22,10 +24,6 @@ class ReceitaSerializer(serializers.ModelSerializer):
                 if self.is_outra_receita(id):
                     raise serializers.ValidationError("Atualização de receita - a descrição está sendo atualizada para outra que já existe neste mês.")
         return data
-
-    def create(self, validated_data):
-        validated_data['tipo'] = 'R'
-        return super(ReceitaSerializer, self).create(validated_data)
 
     def is_create_receita(self):
         return self.instance is None
@@ -36,18 +34,23 @@ class ReceitaSerializer(serializers.ModelSerializer):
     def is_outra_receita(self, id):
         return not self.instance.id == id
 
+class ListaReceitasAnoMesSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Receita
+        fields = ['descricao', 'valor', 'data']
+
 
 class DespesaSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Transacao
-        fields = ['descricao', 'valor', 'data']
-        verbose_name_plural = "Transações"
+        model = Despesa
+        fields = ['descricao', 'valor', 'data', 'categoria']
+        verbose_name_plural = "Despesas"
 
     def validate(self, data):
         """
         Verifica se existe despesa com a mesma descrição para este mês.
         """
-        despesas_ja_cadastradas = Transacao.objects.filter(descricao=data['descricao'], data__month=data['data'].month, data__year=data['data'].year, tipo='D')
+        despesas_ja_cadastradas = Despesa.objects.filter(descricao=data['descricao'], data__month=data['data'].month, data__year=data['data'].year)
         if despesas_ja_cadastradas:
             if self.is_create_despesa():
                 raise serializers.ValidationError("Cadastro de despesa duplicada - esta despesa já existe neste mês.")
@@ -59,7 +62,8 @@ class DespesaSerializer(serializers.ModelSerializer):
         return data
 
     def create(self, validated_data):
-        validated_data['tipo'] = 'D'
+        if not validated_data['categoria']:
+            validated_data['categoria'] = Categorias.OUTRAS
         return super(DespesaSerializer, self).create(validated_data)
 
     def is_create_despesa(self):
@@ -70,3 +74,8 @@ class DespesaSerializer(serializers.ModelSerializer):
 
     def is_outra_despesa(self, id):
         return not self.instance.id == id
+
+class ListaDespesasAnoMesSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Despesa
+        fields = ['descricao', 'valor', 'data', 'categoria']
