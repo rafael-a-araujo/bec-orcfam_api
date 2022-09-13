@@ -9,53 +9,42 @@ from orcamento_familiar.serializers import ReceitaSerializer, DespesaSerializer,
     ListaDespesasAnoMesSerializer
 
 
-class ReceitasViewSet(viewsets.ModelViewSet):
+class TransacoesViewSet(viewsets.ModelViewSet):
+
+    def get_queryset(self):
+        """
+        Optionally restricts the returned transactions based on description,
+        by filtering against a 'descricao' query parameter in the URL.
+        """
+        queryset = self.model.objects.all()
+        descricao = self.request.query_params.get('descricao')
+        if descricao is not None:
+            queryset = queryset.filter(descricao__contains=descricao)
+        return queryset
+
+class ReceitasViewSet(TransacoesViewSet):
+    model = Receita
     queryset = Receita.objects.all()
     serializer_class = ReceitaSerializer
 
-    def get_queryset(self):
-        """
-        Optionally restricts the returned incomes based on description,
-        by filtering against a 'descricao' query parameter in the URL.
-        """
-        queryset = Receita.objects.all()
-        descricao = self.request.query_params.get('descricao')
-        if descricao is not None:
-            queryset = queryset.filter(descricao__contains=descricao)
-        return queryset
-
-
-class ListaReceitasAnoMes(generics.ListAPIView):
-    """Listando as receitas de mês/ano específico"""
-    def get_queryset(self):
-        queryset = Receita.objects.filter(data__year=self.kwargs['ano'], data__month=self.kwargs['mes'])
-        return queryset
-    serializer_class = ListaReceitasAnoMesSerializer
-
-
-class DespesasViewSet(viewsets.ModelViewSet):
+class DespesasViewSet(TransacoesViewSet):
+    model = Despesa
     queryset = Despesa.objects.all()
     serializer_class = DespesaSerializer
 
+class ListaTransacoesAnoMes(generics.ListAPIView):
+    """Lista as transações de mês/ano específico"""
     def get_queryset(self):
-        """
-        Optionally restricts the returned incomes based on description,
-        by filtering against a 'descricao' query parameter in the URL.
-        """
-        queryset = Despesa.objects.all()
-        descricao = self.request.query_params.get('descricao')
-        if descricao is not None:
-            queryset = queryset.filter(descricao__contains=descricao)
+        queryset = self.model_class.objects.filter(data__year=self.kwargs['ano'], data__month=self.kwargs['mes'])
         return queryset
 
-class ListaDespesasAnoMes(generics.ListAPIView):
-    """Listando as despesas de mês/ano específico"""
-    def get_queryset(self):
-        queryset = Despesa.objects.filter(data__year=self.kwargs['ano'], data__month=self.kwargs['mes'])
-        return queryset
+class ListaReceitasAnoMes(ListaTransacoesAnoMes):
+    model_class = Receita
+    serializer_class = ListaReceitasAnoMesSerializer
+
+class ListaDespesasAnoMes(ListaTransacoesAnoMes):
+    model_class = Despesa
     serializer_class = ListaDespesasAnoMesSerializer
-
-
 
 class ExibeResumoAnoMes(generics.ListAPIView):
 
