@@ -29,6 +29,22 @@ class DespesasTestCase(APITestCase):
         response = self.client.get(self.list_url)
         self.assertEquals(response.status_code, status.HTTP_200_OK)
 
+    def test_requisicao_get_para_buscar_despesas(self):
+        """Teste para verificar a requisição GET para buscar despesas"""
+        response = self.client.get(self.list_url, {'descricao': 'Aluguel'})
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(len(response.data), 1)
+
+    def test_requisicao_get_para_listar_despesas_no_mes(self):
+        """Teste para verificar a requisição GET para buscar despesas"""
+        response = self.client.get('/despesas/2022/09/')
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(len(response.data), 2)
+        response = self.client.get('/despesas/2022/10/')
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(len(response.data), 0)
+
+
     def test_requisicao_post_para_criar_despesa(self):
         """Teste para verificar a requisição POST para criar despesa"""
         data = {
@@ -39,6 +55,18 @@ class DespesasTestCase(APITestCase):
         }
         response = self.client.post(self.list_url, data=data)
         self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+
+    def test_requisicao_post_para_criar_despesa_sem_categoria(self):
+        """Teste para verificar a requisição POST para criar despesa sem informar a categoria"""
+        data = {
+            'descricao': 'Restaurante',
+            'valor': decimal.Decimal('1000.00'),
+            'data': '2022-10-10',
+            'categoria':''
+        }
+        response = self.client.post(self.list_url, data=data)
+        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+        self.assertEquals(response.data['categoria'], Categorias.OUTRAS)
 
     def test_requisicao_post_para_criar_despesa_valor_negativo(self):
         """Teste para verificar a requisição POST para criar despesa com valor negativo"""
