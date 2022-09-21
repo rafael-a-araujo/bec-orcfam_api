@@ -21,6 +21,7 @@ from orcamento_familiar.views import ReceitasViewSet, DespesasViewSet, ListaRece
 router = routers.DefaultRouter()
 router.register('receitas', ReceitasViewSet, basename='Receitas')
 router.register('despesas', DespesasViewSet, basename='Despesas')
+#router.register('resumo', ExibeResumoAnoMes.as_view(), basename='Resumo')
 
 
 urlpatterns = [
